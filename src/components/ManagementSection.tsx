@@ -101,7 +101,7 @@ export function ManagementSection({ handlaggning }: ManagementSectionProps) {
             <h4 className="font-display font-semibold text-lg text-foreground">Utredning</h4>
           </div>
           
-          <div className="space-y-4">
+          <div className="text-sm space-y-4">
               {handlaggning.utredning.map((utredning, index) => {
                 const isLab = utredning.typ.toLowerCase().includes('lab');
                 const { grouped, ungrouped } = isLab 
@@ -110,19 +110,19 @@ export function ManagementSection({ handlaggning }: ManagementSectionProps) {
                 const groupKeys = Object.keys(grouped);
                 
                 return (
-                  <div key={index} className="p-4 rounded-xl bg-muted/30 border border-border/50">
-                    <div className="flex items-center gap-3 mb-3">
+                  <div key={index}>
+                    <div className="flex items-center gap-2 mb-1">
                       <span className="font-semibold text-foreground">{utredning.typ}</span>
                       <Badge 
                         variant="outline" 
-                        className={prioritetConfig[utredning.prioritet]?.badge || prioritetConfig.elektiv.badge}
+                        className={`text-xs ${prioritetConfig[utredning.prioritet]?.badge || prioritetConfig.elektiv.badge}`}
                       >
                         {prioritetConfig[utredning.prioritet]?.label || utredning.prioritet}
                       </Badge>
                     </div>
                     
                     {isLab && groupKeys.length > 0 ? (
-                      <div className="text-sm space-y-0.5">
+                      <div className="space-y-0.5">
                         {groupKeys.map((groupName) => (
                           <p key={groupName} className="text-muted-foreground">
                             <span className="font-medium text-foreground">{groupName}:</span>{' '}
@@ -134,14 +134,11 @@ export function ManagementSection({ handlaggning }: ManagementSectionProps) {
                         )}
                       </div>
                     ) : (
-                      <ul className="space-y-1.5">
+                      <div className="space-y-0.5">
                         {utredning.undersokningar.map((undersokning, i) => (
-                          <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                            {undersokning}
-                          </li>
+                          <p key={i} className="text-muted-foreground">{undersokning}</p>
                         ))}
-                      </ul>
+                      </div>
                     )}
                   </div>
                 );
