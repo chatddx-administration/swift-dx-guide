@@ -111,14 +111,8 @@ export function ManagementSection({ handlaggning }: ManagementSectionProps) {
                 
                 return (
                   <div key={index}>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="mb-1">
                       <span className="font-semibold text-foreground">{utredning.typ}</span>
-                      <Badge 
-                        variant="outline" 
-                        className={`text-xs ${prioritetConfig[utredning.prioritet]?.badge || prioritetConfig.elektiv.badge}`}
-                      >
-                        {prioritetConfig[utredning.prioritet]?.label || utredning.prioritet}
-                      </Badge>
                     </div>
                     
                     {isLab && groupKeys.length > 0 ? (
