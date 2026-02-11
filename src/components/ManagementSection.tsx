@@ -76,6 +76,14 @@ function groupLabTests(undersokningar: string[]): { grouped: { [key: string]: st
     }
   });
 
+  // Dissolve groups with only 1 item – move them to ungrouped
+  for (const [key, items] of Object.entries(grouped)) {
+    if (items.length < 2) {
+      ungrouped.push(...items);
+      delete grouped[key];
+    }
+  }
+
   return { grouped, ungrouped };
 }
 
