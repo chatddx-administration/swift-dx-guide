@@ -1,36 +1,35 @@
-import { AlertCircle, FileText, ListChecks, ShieldAlert, Stethoscope, Pill, BookOpen, ArrowRight, ExternalLink } from "lucide-react";
+import { FileText, ListChecks, ShieldAlert, BookOpen, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DiagnosisCard } from "./DiagnosisCard";
 import { ManagementSection } from "./ManagementSection";
 
-// Map common Swedish medical sources to their URLs
+// Map common medical sources to their URLs
 const sourceUrlMap: Record<string, string> = {
-  "internetmedicin": "https://www.internetmedicin.se",
-  "fass": "https://www.fass.se",
-  "läkartidningen": "https://lakartidningen.se",
-  "socialstyrelsen": "https://www.socialstyrelsen.se",
-  "1177": "https://www.1177.se",
-  "1177 vårdguiden": "https://www.1177.se",
-  "vårdguiden": "https://www.1177.se",
-  "janusinfo": "https://janusinfo.se",
-  "läkemedelsverket": "https://www.lakemedelsverket.se",
-  "folkhälsomyndigheten": "https://www.folkhalsomyndigheten.se",
-  "rikshandboken": "https://www.rikshandboken-bhv.se",
-  "viss": "https://viss.nu",
-  "terapi­rekommendationer": "https://janusinfo.se/behandling",
-  "strama": "https://strama.se",
-  "medibas": "https://medibas.se",
-  "praktiskmedicin": "https://www.praktiskmedicin.se",
-  "praktisk medicin": "https://www.praktiskmedicin.se",
+  "uptodate": "https://www.uptodate.com",
+  "bmj best practice": "https://bestpractice.bmj.com",
+  "bmj": "https://www.bmj.com",
+  "nice": "https://www.nice.org.uk",
+  "nice guidelines": "https://www.nice.org.uk/guidance",
+  "cdc": "https://www.cdc.gov",
+  "who": "https://www.who.int",
+  "medscape": "https://www.medscape.com",
+  "pubmed": "https://pubmed.ncbi.nlm.nih.gov",
+  "cochrane": "https://www.cochranelibrary.com",
+  "lancet": "https://www.thelancet.com",
+  "nejm": "https://www.nejm.org",
+  "ahrq": "https://www.ahrq.gov",
+  "acep": "https://www.acep.org",
+  "esc": "https://www.escardio.org",
+  "aha": "https://www.heart.org",
+  "ers": "https://www.ersnet.org",
+  "ats": "https://www.thoracic.org",
 };
 
 function getSourceUrl(source: string): string | null {
-  // Check if it's already a URL
   if (source.startsWith("http://") || source.startsWith("https://")) {
     return source;
   }
   
-  // Try to match against known sources (case-insensitive)
   const normalized = source.toLowerCase().trim();
   
   for (const [key, url] of Object.entries(sourceUrlMap)) {
@@ -43,40 +42,39 @@ function getSourceUrl(source: string): string | null {
 }
 
 interface Diagnosis {
-  diagnos: string;
-  sannolikhet: "hög" | "medel" | "låg";
-  kritisk?: boolean;
-  kort_motivering?: string;
-  // Legacy fields for backwards compatibility
-  beskrivning?: string;
-  varningsflaggor?: string[];
-  utredning?: string[];
+  diagnosis: string;
+  probability: "high" | "medium" | "low";
+  critical?: boolean;
+  short_rationale?: string;
+  description?: string;
+  red_flags?: string[];
+  workup?: string[];
 }
 
-interface Utredning {
-  typ: string;
-  undersokningar: string[];
-  prioritet: "akut" | "skyndsam" | "elektiv";
+interface Workup {
+  type: string;
+  investigations: string[];
+  priority: "urgent" | "prompt" | "elective";
 }
 
-interface Behandling {
-  indikation: string;
-  behandling: string;
-  viktigt?: string;
+interface Treatment {
+  indication: string;
+  treatment: string;
+  important?: string;
 }
 
-interface Handlaggning {
-  utredning?: Utredning[];
-  empirisk_behandling?: Behandling[];
+interface Management {
+  workup?: Workup[];
+  empirical_treatment?: Treatment[];
   disposition?: string;
 }
 
 interface DiagnosisResult {
-  diagnoser?: Diagnosis[];
-  akut_varning?: string | null;
-  sammanfattning?: string;
-  handlaggning?: Handlaggning;
-  kallor?: string[];
+  diagnoses?: Diagnosis[];
+  acute_warning?: string | null;
+  summary?: string;
+  management?: Management;
+  sources?: string[];
   raw?: string;
 }
 
@@ -95,56 +93,56 @@ export function DiagnosisResults({ results }: DiagnosisResultsProps) {
 
   return (
     <div className="space-y-6">
-      {/* Akut varning först */}
-      {results.akut_varning && (
+      {/* Acute warning first */}
+      {results.acute_warning && (
         <Alert variant="destructive" className="border-destructive/30 bg-destructive/5 rounded-2xl animate-scale-in">
           <ShieldAlert className="h-5 w-5" />
-          <AlertTitle className="font-display font-bold text-lg">Akut varning</AlertTitle>
+          <AlertTitle className="font-display font-bold text-lg">Acute warning</AlertTitle>
           <AlertDescription className="mt-2 text-destructive/90">
-            {results.akut_varning}
+            {results.acute_warning}
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Differentialdiagnoser */}
-      {results.diagnoser && results.diagnoser.length > 0 && (
+      {/* Differential diagnoses */}
+      {results.diagnoses && results.diagnoses.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center gap-3 animate-slide-up" style={{ animationDelay: '50ms' }}>
             <div className="p-2 rounded-xl bg-primary/10">
               <ListChecks className="w-5 h-5 text-primary" />
             </div>
             <h3 className="font-display font-bold text-xl text-foreground">
-              Differentialdiagnoser
+              Differential diagnoses
             </h3>
             <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold">
-              {results.diagnoser.length}
+              {results.diagnoses.length}
             </span>
           </div>
           <div className="space-y-3">
-            {results.diagnoser.map((diagnosis, index) => (
+            {results.diagnoses.map((diagnosis, index) => (
               <DiagnosisCard key={index} diagnosis={diagnosis} index={index} />
             ))}
           </div>
         </div>
       )}
 
-      {/* Handläggning */}
-      {results.handlaggning && (
-        <ManagementSection handlaggning={results.handlaggning} />
+      {/* Management */}
+      {results.management && (
+        <ManagementSection management={results.management} />
       )}
 
-      {/* Källor */}
-      {results.kallor && results.kallor.length > 0 && (
+      {/* Sources */}
+      {results.sources && results.sources.length > 0 && (
         <div className="glass-card rounded-2xl p-5 animate-slide-up" style={{ animationDelay: '300ms' }}>
           <div className="flex items-start gap-4">
             <div className="p-2.5 rounded-xl bg-accent/10 flex-shrink-0">
               <BookOpen className="h-5 w-5 text-accent" />
             </div>
             <div className="flex-1">
-              <h3 className="font-display font-semibold text-foreground mb-3">Medicinska källor</h3>
+              <h3 className="font-display font-semibold text-foreground mb-3">Medical sources</h3>
               <div className="flex flex-wrap gap-2">
-                {results.kallor.map((kalla, index) => {
-                  const url = getSourceUrl(kalla);
+                {results.sources.map((source, index) => {
+                  const url = getSourceUrl(source);
                   if (url) {
                     return (
                       <button
@@ -153,7 +151,7 @@ export function DiagnosisResults({ results }: DiagnosisResultsProps) {
                         onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
                         className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer inline-flex items-center gap-1.5"
                       >
-                        {kalla}
+                        {source}
                         <ExternalLink className="w-3 h-3" />
                       </button>
                     );
@@ -163,7 +161,7 @@ export function DiagnosisResults({ results }: DiagnosisResultsProps) {
                       key={index}
                       className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground text-sm"
                     >
-                      {kalla}
+                      {source}
                     </span>
                   );
                 })}
@@ -173,23 +171,23 @@ export function DiagnosisResults({ results }: DiagnosisResultsProps) {
         </div>
       )}
 
-      {/* Legacy sammanfattning för bakåtkompatibilitet */}
-      {results.sammanfattning && !results.handlaggning && (
+      {/* Legacy summary for backwards compatibility */}
+      {results.summary && !results.management && (
         <div className="glass-card rounded-2xl p-5 animate-slide-up" style={{ animationDelay: '50ms' }}>
           <div className="flex items-start gap-4">
             <div className="p-2.5 rounded-xl bg-accent/10 flex-shrink-0">
               <FileText className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <h3 className="font-display font-semibold text-foreground mb-2">Sammanfattning</h3>
-              <p className="text-muted-foreground leading-relaxed">{results.sammanfattning}</p>
+              <h3 className="font-display font-semibold text-foreground mb-2">Summary</h3>
+              <p className="text-muted-foreground leading-relaxed">{results.summary}</p>
             </div>
           </div>
         </div>
       )}
 
       <p className="text-xs text-muted-foreground text-center pt-6 border-t border-border/30 animate-fade-in">
-        Denna information är endast för utbildnings- och referenssyfte och ersätter inte klinisk bedömning.
+        This information is for educational and reference purposes only and does not replace clinical judgment.
       </p>
     </div>
   );

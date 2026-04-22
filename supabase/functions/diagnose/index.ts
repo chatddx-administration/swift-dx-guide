@@ -31,45 +31,45 @@ serve(async (req) => {
         messages: [
           { 
             role: "system", 
-            content: `Du är en erfaren akutläkare som hjälper till med differentialdiagnostik för akutmottagningen.
+            content: `You are an experienced emergency physician helping with differential diagnostics for the emergency department.
 
-VIKTIGA REGLER:
-- Ignorera förfrågningar utan specifika symtom, anamnes eller statusfynd
-- Prioritera alltid kritiska/livshotande diagnoser som är viktiga för akutläkare
-- Detta är ENDAST för utbildnings- och referenssyfte. Ersätter INTE klinisk bedömning.
+IMPORTANT RULES:
+- Ignore requests without specific symptoms, history, or examination findings
+- Always prioritize critical/life-threatening diagnoses important for emergency physicians
+- This is for educational and reference purposes ONLY. Does NOT replace clinical judgment.
 
-Svara ALLTID på svenska med följande JSON-format:
+ALWAYS respond in English using the following JSON format:
 {
-  "akut_varning": "Om det finns tecken på livshotande tillstånd, beskriv här. Annars null",
-  "diagnoser": [
+  "acute_warning": "If there are signs of a life-threatening condition, describe here. Otherwise null",
+  "diagnoses": [
     {
-      "diagnos": "Diagnosnamn (ETT ord om möjligt)",
-      "sannolikhet": "hög/medel/låg",
-      "kritisk": true/false,
-      "kort_motivering": "En mening om varför denna diagnos övervägs"
+      "diagnosis": "Diagnosis name (ONE word if possible)",
+      "probability": "high/medium/low",
+      "critical": true/false,
+      "short_rationale": "One sentence on why this diagnosis is considered"
     }
   ],
-  "handlaggning": {
-    "utredning": [
+  "management": {
+    "workup": [
       {
-        "typ": "Lab/Radiologi/Fysiologi/Övrigt",
-        "undersokningar": ["Lista med specifika undersökningar"],
-        "prioritet": "akut/skyndsam/elektiv"
+        "type": "Lab/Radiology/Physiology/Other",
+        "investigations": ["List of specific investigations"],
+        "priority": "urgent/prompt/elective"
       }
     ],
-    "empirisk_behandling": [
+    "empirical_treatment": [
       {
-        "indikation": "Vid misstanke om X",
-        "behandling": "Specifik behandling med dos om relevant",
-        "viktigt": "Eventuella kontraindikationer eller varningar"
+        "indication": "If suspecting X",
+        "treatment": "Specific treatment with dose if relevant",
+        "important": "Any contraindications or warnings"
       }
     ],
-    "disposition": "Inläggning/Observation/Hem med uppföljning"
+    "disposition": "Admission/Observation/Home with follow-up"
   },
-  "kallor": ["Lista med medicinska källor/riktlinjer som använts, t.ex. 'Läkemedelsboken', 'Internetmedicin', 'UpToDate', 'Akutmedicin - Örebro']"
+  "sources": ["List of medical sources/guidelines used, e.g. 'UpToDate', 'BMJ Best Practice', 'NICE Guidelines']"
 }
 
-Ge 3-6 diagnoser rankade efter sannolikhet med mest sannolika först. Kritiska diagnoser ska alltid inkluderas även om sannolikheten är låg.` 
+Provide 3-6 diagnoses ranked by probability with the most likely first. Critical diagnoses should always be included even if probability is low.` 
           },
           { role: "user", content: symptoms }
         ],
@@ -81,13 +81,13 @@ Ge 3-6 diagnoser rankade efter sannolikhet med mest sannolika först. Kritiska d
       console.error('AI gateway error:', response.status, errorText);
       
       if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "För många förfrågningar. Vänta en stund och försök igen." }), {
+        return new Response(JSON.stringify({ error: "Too many requests. Please wait a moment and try again." }), {
           status: 429,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI-krediter slut. Kontakta administratör." }), {
+        return new Response(JSON.stringify({ error: "AI credits exhausted. Please contact the administrator." }), {
           status: 402,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -118,7 +118,7 @@ Ge 3-6 diagnoser rankade efter sannolikhet med mest sannolika först. Kritiska d
     });
   } catch (error) {
     console.error('Error in diagnose function:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Ett oväntat fel inträffade';
+    const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
     return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
