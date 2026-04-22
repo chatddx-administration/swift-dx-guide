@@ -1,63 +1,47 @@
-import { Beaker, Pill, ArrowRight, AlertTriangle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Beaker, Pill, ArrowRight } from "lucide-react";
 
-interface Utredning {
-  typ: string;
-  undersokningar: string[];
-  prioritet: "akut" | "skyndsam" | "elektiv";
+interface Workup {
+  type: string;
+  investigations: string[];
+  priority: "urgent" | "prompt" | "elective";
 }
 
-interface Behandling {
-  indikation: string;
-  behandling: string;
-  viktigt?: string;
+interface Treatment {
+  indication: string;
+  treatment: string;
+  important?: string;
 }
 
-interface Handlaggning {
-  utredning?: Utredning[];
-  empirisk_behandling?: Behandling[];
+interface Management {
+  workup?: Workup[];
+  empirical_treatment?: Treatment[];
   disposition?: string;
 }
 
 interface ManagementSectionProps {
-  handlaggning: Handlaggning;
+  management: Management;
 }
 
-const prioritetConfig = {
-  akut: {
-    badge: "bg-destructive/10 text-destructive border-destructive/30",
-    label: "Akut",
-  },
-  skyndsam: {
-    badge: "bg-warning/10 text-warning border-warning/30",
-    label: "Skyndsam",
-  },
-  elektiv: {
-    badge: "bg-muted text-muted-foreground border-border",
-    label: "Elektiv",
-  },
-};
-
-// Lab grouping patterns
+// Lab grouping patterns (English lab names)
 const labGroups: { name: string; patterns: RegExp[] }[] = [
-  { name: "Blodstatus", patterns: [/^hb$/i, /^lpk$/i, /^tpk$/i, /^b-lpk/i, /^b-hb/i, /^b-tpk/i, /^mcv/i, /^mch/i, /leukocyt/i, /trombocyt/i, /hemoglobin/i, /erytrocyt/i, /hematokrit/i, /diff/i] },
-  { name: "Elektrolyter", patterns: [/^na$/i, /^k$/i, /^ca$/i, /^mg$/i, /^fosfat/i, /natrium/i, /kalium/i, /kalcium/i, /magnesium/i, /klorid/i, /^s-na/i, /^s-k/i, /^s-ca/i, /^p-na/i, /^p-k/i] },
-  { name: "Njurfunktion", patterns: [/krea/i, /urea/i, /egfr/i, /cystatin/i, /^s-krea/i] },
-  { name: "Leverprover", patterns: [/^alat/i, /^asat/i, /^alp/i, /^gt$/i, /^ggt/i, /bilirubin/i, /^ld$/i, /albumin/i, /lever/i, /^s-alat/i, /^s-asat/i, /^s-alp/i, /^s-bilirubin/i] },
-  { name: "Infektionsprover", patterns: [/^crp$/i, /prokalcitonin/i, /procalcitonin/i, /^pct$/i, /leukocyt/i, /^s-crp/i, /^p-crp/i, /sr$/i, /sänka/i] },
-  { name: "Koagulation", patterns: [/^pk$/i, /^inr$/i, /^aptt$/i, /fibrinogen/i, /d-dimer/i, /koagul/i, /^p-pk/i, /^p-aptt/i] },
-  { name: "Hjärtmarkörer", patterns: [/troponin/i, /^tnt$/i, /^tni$/i, /bnp/i, /nt-probnp/i, /ck-mb/i, /myoglobin/i] },
-  { name: "Glukos/Metabolism", patterns: [/glukos/i, /hba1c/i, /laktat/i, /^p-glukos/i, /blodsocker/i] },
-  { name: "Blodgas", patterns: [/blodgas/i, /artärblodgas/i, /abg/i, /venös.*gas/i, /^ph$/i, /pco2/i, /po2/i, /be$/i, /bikarbonat/i] },
-  { name: "Thyroidea", patterns: [/tsh/i, /t3/i, /t4/i, /fritt.*t4/i, /thyroid/i, /sköldkörtel/i] },
+  { name: "Complete blood count", patterns: [/^cbc$/i, /^fbc$/i, /^hb$/i, /hemoglobin/i, /haemoglobin/i, /wbc/i, /platelet/i, /leukocyt/i, /erythrocyt/i, /hematocrit/i, /haematocrit/i, /^mcv$/i, /^mch$/i, /diff/i] },
+  { name: "Electrolytes", patterns: [/sodium/i, /potassium/i, /calcium/i, /magnesium/i, /chloride/i, /phosphate/i, /^na\+?$/i, /^k\+?$/i, /^ca\+?$/i, /^mg\+?$/i, /electrolyte/i] },
+  { name: "Renal function", patterns: [/creatinine/i, /urea/i, /bun/i, /egfr/i, /cystatin/i] },
+  { name: "Liver function", patterns: [/^alt$/i, /^ast$/i, /^alp$/i, /^ggt$/i, /bilirubin/i, /^ldh$/i, /albumin/i, /\blft\b/i, /liver/i] },
+  { name: "Inflammatory markers", patterns: [/^crp$/i, /procalcitonin/i, /^pct$/i, /^esr$/i, /sed.*rate/i] },
+  { name: "Coagulation", patterns: [/^pt$/i, /^inr$/i, /^aptt$/i, /^ptt$/i, /fibrinogen/i, /d-dimer/i, /coagulat/i] },
+  { name: "Cardiac markers", patterns: [/troponin/i, /^tnt$/i, /^tni$/i, /^bnp$/i, /nt-probnp/i, /ck-mb/i, /myoglobin/i] },
+  { name: "Glucose/Metabolism", patterns: [/glucose/i, /hba1c/i, /lactate/i, /blood sugar/i] },
+  { name: "Blood gas", patterns: [/blood gas/i, /\babg\b/i, /\bvbg\b/i, /^ph$/i, /pco2/i, /po2/i, /\bbe\b/i, /bicarbonate/i] },
+  { name: "Thyroid", patterns: [/^tsh$/i, /^t3$/i, /^t4$/i, /free.*t4/i, /thyroid/i] },
 ];
 
-function groupLabTests(undersokningar: string[]): { grouped: { [key: string]: string[] }; ungrouped: string[] } {
+function groupLabTests(investigations: string[]): { grouped: { [key: string]: string[] }; ungrouped: string[] } {
   const grouped: { [key: string]: string[] } = {};
   const ungrouped: string[] = [];
   const assigned = new Set<number>();
 
-  undersokningar.forEach((item, index) => {
+  investigations.forEach((item, index) => {
     for (const group of labGroups) {
       if (group.patterns.some(pattern => pattern.test(item))) {
         if (!grouped[group.name]) {
@@ -70,24 +54,16 @@ function groupLabTests(undersokningar: string[]): { grouped: { [key: string]: st
     }
   });
 
-  undersokningar.forEach((item, index) => {
+  investigations.forEach((item, index) => {
     if (!assigned.has(index)) {
       ungrouped.push(item);
     }
   });
 
-  // Dissolve groups with only 1 item – move them to ungrouped
-  for (const [key, items] of Object.entries(grouped)) {
-    if (items.length < 2) {
-      ungrouped.push(...items);
-      delete grouped[key];
-    }
-  }
-
   return { grouped, ungrouped };
 }
 
-export function ManagementSection({ handlaggning }: ManagementSectionProps) {
+export function ManagementSection({ management }: ManagementSectionProps) {
   return (
     <div className="space-y-4 animate-slide-up" style={{ animationDelay: '200ms' }}>
       <div className="flex items-center gap-3">
@@ -95,32 +71,32 @@ export function ManagementSection({ handlaggning }: ManagementSectionProps) {
           <ArrowRight className="w-5 h-5 text-accent" />
         </div>
         <h3 className="font-display font-bold text-xl text-foreground">
-          Handläggning
+          Management
         </h3>
       </div>
 
-      {/* Utredning */}
-      {handlaggning.utredning && handlaggning.utredning.length > 0 && (
+      {/* Workup */}
+      {management.workup && management.workup.length > 0 && (
         <div className="glass-card rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-primary/10">
               <Beaker className="w-5 h-5 text-primary" />
             </div>
-            <h4 className="font-display font-semibold text-lg text-foreground">Utredning</h4>
+            <h4 className="font-display font-semibold text-lg text-foreground">Workup</h4>
           </div>
           
           <div className="text-sm space-y-4">
-              {handlaggning.utredning.map((utredning, index) => {
-                const isLab = utredning.typ.toLowerCase().includes('lab');
+              {management.workup.map((item, index) => {
+                const isLab = item.type.toLowerCase().includes('lab');
                 const { grouped, ungrouped } = isLab 
-                  ? groupLabTests(utredning.undersokningar) 
-                  : { grouped: {}, ungrouped: utredning.undersokningar };
+                  ? groupLabTests(item.investigations) 
+                  : { grouped: {}, ungrouped: item.investigations };
                 const groupKeys = Object.keys(grouped);
                 
                 return (
                   <div key={index}>
                     <div className="mb-1">
-                      <span className="font-semibold text-foreground">{utredning.typ}</span>
+                      <span className="font-semibold text-foreground">{item.type}</span>
                     </div>
                     
                     {isLab && groupKeys.length > 0 ? (
@@ -137,8 +113,8 @@ export function ManagementSection({ handlaggning }: ManagementSectionProps) {
                       </div>
                     ) : (
                       <div className="space-y-0.5">
-                        {utredning.undersokningar.map((undersokning, i) => (
-                          <p key={i} className="text-muted-foreground">{undersokning}</p>
+                        {item.investigations.map((investigation, i) => (
+                          <p key={i} className="text-muted-foreground">{investigation}</p>
                         ))}
                       </div>
                     )}
@@ -149,24 +125,24 @@ export function ManagementSection({ handlaggning }: ManagementSectionProps) {
         </div>
       )}
 
-      {/* Empirisk behandling */}
-      {handlaggning.empirisk_behandling && handlaggning.empirisk_behandling.length > 0 && (
+      {/* Empirical treatment */}
+      {management.empirical_treatment && management.empirical_treatment.length > 0 && (
         <div className="glass-card rounded-2xl p-5 space-y-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-accent/10">
               <Pill className="w-5 h-5 text-accent" />
             </div>
-            <h4 className="font-display font-semibold text-lg text-foreground">Empirisk behandling</h4>
+            <h4 className="font-display font-semibold text-lg text-foreground">Empirical treatment</h4>
           </div>
           
           <div className="text-sm space-y-1">
-            {handlaggning.empirisk_behandling.map((behandling, index) => (
+            {management.empirical_treatment.map((treatment, index) => (
               <div key={index}>
                 <p className="text-muted-foreground">
-                  <span className="font-medium text-foreground">{behandling.indikation}:</span>{' '}
-                  {behandling.behandling}
-                  {behandling.viktigt && (
-                    <span className="text-warning ml-1">⚠ {behandling.viktigt}</span>
+                  <span className="font-medium text-foreground">{treatment.indication}:</span>{' '}
+                  {treatment.treatment}
+                  {treatment.important && (
+                    <span className="text-warning ml-1">⚠ {treatment.important}</span>
                   )}
                 </p>
               </div>
@@ -176,7 +152,7 @@ export function ManagementSection({ handlaggning }: ManagementSectionProps) {
       )}
 
       {/* Disposition */}
-      {handlaggning.disposition && (
+      {management.disposition && (
         <div className="glass-card rounded-2xl p-5">
           <div className="flex items-start gap-4">
             <div className="p-2.5 rounded-xl bg-primary/10 flex-shrink-0">
@@ -184,7 +160,7 @@ export function ManagementSection({ handlaggning }: ManagementSectionProps) {
             </div>
             <div>
               <h4 className="font-display font-semibold text-foreground mb-2">Disposition</h4>
-              <p className="text-muted-foreground">{handlaggning.disposition}</p>
+              <p className="text-muted-foreground">{management.disposition}</p>
             </div>
           </div>
         </div>

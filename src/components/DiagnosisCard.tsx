@@ -3,14 +3,14 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 
 interface Diagnosis {
-  diagnos: string;
-  sannolikhet: "hög" | "medel" | "låg";
-  kritisk?: boolean;
-  kort_motivering?: string;
+  diagnosis: string;
+  probability: "high" | "medium" | "low";
+  critical?: boolean;
+  short_rationale?: string;
   // Legacy fields for backwards compatibility
-  beskrivning?: string;
-  varningsflaggor?: string[];
-  utredning?: string[];
+  description?: string;
+  red_flags?: string[];
+  workup?: string[];
 }
 
 interface DiagnosisCardProps {
@@ -19,29 +19,29 @@ interface DiagnosisCardProps {
 }
 
 const probabilityConfig = {
-  hög: {
+  high: {
     badge: "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/15",
     indicator: "bg-gradient-to-r from-destructive to-destructive/80",
-    label: "Hög",
+    label: "High",
   },
-  medel: {
+  medium: {
     badge: "bg-warning/10 text-warning border-warning/30 hover:bg-warning/15",
     indicator: "bg-gradient-to-r from-warning to-warning/80",
-    label: "Medel",
+    label: "Medium",
   },
-  låg: {
+  low: {
     badge: "bg-muted text-muted-foreground border-border hover:bg-muted/80",
     indicator: "bg-gradient-to-r from-muted-foreground/50 to-muted-foreground/30",
-    label: "Låg",
+    label: "Low",
   },
 };
 
 export function DiagnosisCard({ diagnosis, index }: DiagnosisCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const config = probabilityConfig[diagnosis.sannolikhet];
-  const hasExpandableContent = diagnosis.beskrivning || diagnosis.varningsflaggor?.length || diagnosis.utredning?.length;
+  const config = probabilityConfig[diagnosis.probability];
+  const hasExpandableContent = diagnosis.description || diagnosis.red_flags?.length || diagnosis.workup?.length;
 
-  const isExpandable = diagnosis.kort_motivering || hasExpandableContent;
+  const isExpandable = diagnosis.short_rationale || hasExpandableContent;
 
   return (
     <div 
@@ -63,7 +63,7 @@ export function DiagnosisCard({ diagnosis, index }: DiagnosisCardProps) {
                   {index + 1}
                 </span>
                 <h3 className="text-lg font-display font-semibold text-foreground group-hover:text-primary transition-colors">
-                  {diagnosis.diagnos}
+                  {diagnosis.diagnosis}
                 </h3>
               </div>
               <div className="flex items-center gap-2 ml-11">
@@ -86,25 +86,25 @@ export function DiagnosisCard({ diagnosis, index }: DiagnosisCardProps) {
         
         {expanded && (
           <div className="px-5 pb-5 space-y-5 animate-fade-in border-t border-border/30 pt-5">
-            {diagnosis.kort_motivering && (
+            {diagnosis.short_rationale && (
               <p className="text-muted-foreground leading-relaxed">
-                {diagnosis.kort_motivering}
+                {diagnosis.short_rationale}
               </p>
             )}
-            {diagnosis.beskrivning && (
+            {diagnosis.description && (
               <p className="text-muted-foreground leading-relaxed">
-                {diagnosis.beskrivning}
+                {diagnosis.description}
               </p>
             )}
 
-            {diagnosis.varningsflaggor && diagnosis.varningsflaggor.length > 0 && (
+            {diagnosis.red_flags && diagnosis.red_flags.length > 0 && (
               <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/20 space-y-3">
                 <h4 className="text-sm font-semibold flex items-center gap-2 text-destructive">
                   <AlertTriangle size={16} />
-                  Varningsflaggor
+                  Red flags
                 </h4>
                 <ul className="space-y-2">
-                  {diagnosis.varningsflaggor.map((flag, i) => (
+                  {diagnosis.red_flags.map((flag, i) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-destructive mt-2 flex-shrink-0" />
                       {flag}
@@ -114,14 +114,14 @@ export function DiagnosisCard({ diagnosis, index }: DiagnosisCardProps) {
               </div>
             )}
 
-            {diagnosis.utredning && diagnosis.utredning.length > 0 && (
+            {diagnosis.workup && diagnosis.workup.length > 0 && (
               <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-3">
                 <h4 className="text-sm font-semibold flex items-center gap-2 text-primary">
                   <Beaker size={16} />
-                  Förslag på utredning
+                  Suggested workup
                 </h4>
                 <ul className="space-y-2">
-                  {diagnosis.utredning.map((item, i) => (
+                  {diagnosis.workup.map((item, i) => (
                     <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
                       {item}

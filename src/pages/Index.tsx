@@ -17,7 +17,7 @@ const Index = () => {
     e.preventDefault();
     
     if (!symptoms.trim()) {
-      toast.error("Ange symtom för att få förslag på differentialdiagnoser");
+      toast.error("Enter symptoms to get differential diagnosis suggestions");
       return;
     }
 
@@ -40,7 +40,7 @@ const Index = () => {
       setResults(data);
     } catch (error: any) {
       console.error("Diagnosis error:", error);
-      toast.error(error.message || "Något gick fel. Försök igen.");
+      toast.error(error.message || "Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -62,11 +62,11 @@ const Index = () => {
             <Stethoscope className="w-10 h-10 text-primary-foreground" />
           </div>
           <h1 className="text-4xl sm:text-5xl font-display font-bold mb-4 tracking-tight">
-            <span className="gradient-text">Akut</span>{" "}
-            <span className="text-foreground">Differentialdiagnostik</span>
+            <span className="gradient-text">Emergency</span>{" "}
+            <span className="text-foreground">Differential Diagnostics</span>
           </h1>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto leading-relaxed">
-            Beskriv patientens symtom och anamnes för AI-baserade förslag på differentialdiagnoser
+            Describe the patient's symptoms and history for AI-based differential diagnosis suggestions
           </p>
         </header>
 
@@ -74,8 +74,8 @@ const Index = () => {
         <Alert className="mb-8 glass-card border-warning/20 animate-slide-up" style={{ animationDelay: '100ms' }}>
           <AlertTriangle className="h-5 w-5 text-warning" />
           <AlertDescription className="text-sm text-muted-foreground ml-2">
-            <strong className="text-foreground font-semibold">Viktigt:</strong> Detta verktyg är endast för utbildnings- och referenssyfte. 
-            Det ersätter inte klinisk bedömning eller läkarkonsultation.
+            <strong className="text-foreground font-semibold">Important:</strong> This tool is for educational and reference purposes only. 
+            It does not replace clinical judgment or medical consultation.
           </AlertDescription>
         </Alert>
 
@@ -87,9 +87,9 @@ const Index = () => {
                 <Activity className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <CardTitle className="font-display text-xl">Symtom & Anamnes</CardTitle>
+                <CardTitle className="font-display text-xl">Symptoms & History</CardTitle>
                 <CardDescription className="mt-1">
-                  Beskriv aktuella symtom, duration, svårighetsgrad, och relevant sjukdomshistoria
+                  Describe current symptoms, duration, severity, and relevant medical history
                 </CardDescription>
               </div>
             </div>
@@ -100,7 +100,7 @@ const Index = () => {
                 <Textarea
                   value={symptoms}
                   onChange={(e) => setSymptoms(e.target.value)}
-                  placeholder="Exempel: 65-årig man med plötslig bröstsmärta sedan 2 timmar, utstrålning till vänster arm, illamående, kallsvettig. Tidigare hypertoni och diabetes typ 2. Röker 20 cigaretter/dag."
+                  placeholder="Example: 65-year-old man with sudden chest pain for 2 hours, radiating to the left arm, nausea, cold sweats. History of hypertension and type 2 diabetes. Smokes 20 cigarettes/day."
                   className="min-h-[160px] resize-y text-base leading-relaxed bg-background/50 border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all rounded-xl"
                   disabled={isLoading}
                 />
@@ -115,12 +115,12 @@ const Index = () => {
                   {isLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      Analyserar...
+                      Analyzing...
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      Analysera symtom
+                      Analyze symptoms
                     </>
                   )}
                 </Button>
