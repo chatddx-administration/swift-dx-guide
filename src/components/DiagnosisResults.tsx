@@ -1,7 +1,10 @@
-import { FileText, ListChecks, ShieldAlert, BookOpen, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { FileText, ListChecks, ShieldAlert, BookOpen, ExternalLink, Copy, Check } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { DiagnosisCard } from "./DiagnosisCard";
 import { ManagementSection } from "./ManagementSection";
+import { toast } from "sonner";
 
 // Map common medical sources to their URLs
 const sourceUrlMap: Record<string, string> = {
@@ -83,9 +86,92 @@ interface DiagnosisResultsProps {
 }
 
 export function DiagnosisResults({ results }: DiagnosisResultsProps) {
+  const [copied, setCopied] = useState(false);
+
+  const formatResultsAsText = (): string => {
+    const lines: string[] = [];
+
+    if (results.acute_warning) {
+      lines.push("⚠ ACUTE WARNING");
+      lines.push(results.acute_warning);
+      lines.push("");
+    }
+
+    if (results.diagnoses && results.diagnoses.length > 0) {
+      lines.push("DIFFERENTIAL DIAGNOSES");
+      results.diagnoses.forEach((d, i) => {
+        const prob = d.probability ? ` [${d.probability.toUpperCase()}]` : "";
+        lines.push(`${i + 1}. ${d.diagnosis}${prob}`);
+        if (d.short_rationale) lines.push(`   ${d.short_rationale}`);
+        if (d.description) lines.push(`   ${d.description}`);
+        if (d.red_flags?.length) {
+          lines.push(`   Red flags: ${d.red_flags.join("; ")}`);
+        }
+        if (d.workup?.length) {
+          lines.push(`   Workup: ${d.workup.join("; ")}`);
+        }
+      });
+      lines.push("");
+    }
+
+    if (results.management) {
+      lines.push("MANAGEMENT");
+      if (results.management.workup?.length) {
+        lines.push("Workup:");
+        results.management.workup.forEach((w) => {
+          lines.push(`  ${w.type}: ${w.investigations.join(", ")}`);
+        });
+      }
+      if (results.management.empirical_treatment?.length) {
+        lines.push("Empirical treatment:");
+        results.management.empirical_treatment.forEach((t) => {
+          const imp = t.important ? ` (⚠ ${t.important})` : "";
+          lines.push(`  ${t.indication}: ${t.treatment}${imp}`);
+        });
+      }
+      if (results.management.disposition) {
+        lines.push(`Disposition: ${results.management.disposition}`);
+      }
+      lines.push("");
+    }
+
+    if (results.summary && !results.management) {
+      lines.push("SUMMARY");
+      lines.push(results.summary);
+      lines.push("");
+    }
+
+    if (results.sources?.length) {
+      lines.push("SOURCES");
+      lines.push(results.sources.join(", "));
+      lines.push("");
+    }
+
+    lines.push("This information is for educational and reference purposes only and does not replace clinical judgment.");
+
+    return lines.join("\n").trim();
+  };
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(formatResultsAsText());
+      setCopied(true);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
+
   if (results.raw) {
     return (
-      <div className="glass-card rounded-2xl p-6">
+      <div className="glass-card rounded-2xl p-6 space-y-4">
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={handleCopy} className="gap-2 rounded-xl">
+            {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+        </div>
         <p className="text-muted-foreground whitespace-pre-wrap">{results.raw}</p>
       </div>
     );
@@ -93,6 +179,19 @@ export function DiagnosisResults({ results }: DiagnosisResultsProps) {
 
   return (
     <div className="space-y-6">
+      {/* Copy button */}
+      <div className="flex justify-end animate-fade-in">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleCopy}
+          className="gap-2 rounded-xl glass-card border-border/50 hover:border-primary/40 hover:text-primary transition-all"
+        >
+          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          {copied ? "Copied" : "Copy results"}
+        </Button>
+      </div>
+
       {/* Acute warning first */}
       {results.acute_warning && (
         <Alert variant="destructive" className="border-destructive/30 bg-destructive/5 rounded-2xl animate-scale-in">
