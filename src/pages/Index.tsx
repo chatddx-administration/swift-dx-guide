@@ -34,7 +34,7 @@ const Index = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("diagnose", {
-        body: { symptoms: symptoms.trim() },
+        body: { symptoms: symptoms.trim(), model },
       });
 
       if (error) {
