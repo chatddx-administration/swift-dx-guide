@@ -4,14 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { DiagnosisResults } from "@/components/DiagnosisResults";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+const MODEL_OPTIONS = [
+  { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro" },
+  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+];
 
 const Index = () => {
   const [symptoms, setSymptoms] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
+  const [model, setModel] = useState<string>("google/gemini-2.5-flash");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
