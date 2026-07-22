@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send, Stethoscope, Loader2, AlertTriangle, Activity, Sparkles, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,48 +7,126 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { DiagnosisResults } from "@/components/DiagnosisResults";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-const MODEL_OPTIONS = [
-  { value: "google/gemini-2.5-pro", label: "Gemini 2.5 Pro" },
-  { value: "google/gemini-2.5-flash", label: "Gemini 2.5 Flash" },
-];
+interface ModelOption {
+  value: string;
+  label: string;
+}
 
 const Index = () => {
   const [symptoms, setSymptoms] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
-  const [model, setModel] = useState<string>("google/gemini-2.5-flash");
+  const [model, setModel] = useState<string>();
+  const [errorToastId, setErrorToastId] = useState<string | number | null>(null);
+
+  const [modelOptions, setModelOptions] = useState<ModelOption[]>([
+  ]);
+
+  const backendUrl = import.meta.env.VITE_API_URL;
+
+  useEffect(() => {
+    const fetchModelOptions = async () => {
+      try {
+        const response = await fetch(`${backendUrl}/api/agents?output_type=swift`, {
+          credentials: "include",
+        });
+
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setModelOptions(data);
+          if (data.length > 0) {
+            setModel(data[0].value);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching model options:", error);
+      }
+    };
+
+    fetchModelOptions();
+  }, [backendUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!symptoms.trim()) {
       toast.error("Enter symptoms to get differential diagnosis suggestions");
       return;
     }
 
+    if (errorToastId) {
+      toast.dismiss(errorToastId);
+      setErrorToastId(null);
+    }
+
     setIsLoading(true);
-    setResults(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke("diagnose", {
-        body: { symptoms: symptoms.trim(), model },
+      const response = await fetch(`${backendUrl}/api/diagnose`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          symptoms: symptoms.trim(),
+          model: model,
+        }),
       });
 
-      if (error) {
-        throw new Error(error.message);
+      if (!response.ok) {
+        let errorMessage = `Server returned error status: ${response.status}`;
+        try {
+          const errData = await response.json();
+
+          if (errData && errData.error) {
+            errorMessage = errData.error;
+          }
+          else if (response.status === 422 && errData.detail) {
+
+
+            console.error("Django Ninja Validation Error details:", errData.detail);
+
+            const formattedErrors = errData.detail
+              .map((err: any) => `${err.loc.join(".")} -> ${err.msg}`)
+              .join(", ");
+
+            errorMessage = `Validation Failed: ${formattedErrors}`;
+
+          } else if (errData.error) {
+            errorMessage = errData.error;
+          }
+        } catch {
+          if (response.status === 401) errorMessage = "Unauthorized. Please verify active authentication credentials.";
+        }
+        throw new Error(errorMessage);
       }
 
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
+      const data = await response.json();
+      setResults(null);
       setResults(data);
+      toast.success("Differential diagnosis generated successfully.");
+
     } catch (error: any) {
       console.error("Diagnosis error:", error);
-      toast.error(error.message || "Something went wrong. Please try again.");
+
+      const customId = `error-toast-${Date.now()}`;
+
+      toast.error(error.message || "Something went wrong. Please try again.", {
+        id: customId,
+        duration: Infinity,
+        cancel: {
+          label: "X",
+          onClick: () => {
+            setErrorToastId(null);
+          }
+        }
+      });
+
+      setErrorToastId(customId);
+
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +170,7 @@ const Index = () => {
         <Alert className="mb-8 glass-card border-warning/20 animate-slide-up" style={{ animationDelay: '100ms' }}>
           <AlertTriangle className="h-5 w-5 text-warning" />
           <AlertDescription className="text-sm text-muted-foreground ml-2">
-            <strong className="text-foreground font-semibold">Important:</strong> This tool is for educational and reference purposes only. 
+            <strong className="text-foreground font-semibold">Important:</strong> This tool is for educational and reference purposes only.
             It does not replace clinical judgment or medical consultation.
           </AlertDescription>
         </Alert>
@@ -130,10 +208,10 @@ const Index = () => {
                   </Label>
                   <Select value={model} onValueChange={setModel} disabled={isLoading}>
                     <SelectTrigger id="model-select" className="w-[200px] rounded-xl bg-background/50 border-border/50">
-                      <SelectValue />
+                      <SelectValue placeholder={modelOptions[0]?.label} />
                     </SelectTrigger>
                     <SelectContent>
-                      {MODEL_OPTIONS.map((m) => (
+                      {modelOptions.map((m) => (
                         <SelectItem key={m.value} value={m.value}>
                           {m.label}
                         </SelectItem>
