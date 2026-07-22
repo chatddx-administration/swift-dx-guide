@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Send, Stethoscope, Loader2, AlertTriangle, Activity, Sparkles } from "lucide-react";
+import { Send, Stethoscope, Loader2, AlertTriangle, Activity, Sparkles, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
