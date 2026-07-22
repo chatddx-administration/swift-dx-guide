@@ -63,6 +63,16 @@ const Index = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/3 rounded-full blur-3xl" />
       </div>
 
+      <a
+        href="https://chattddx.com/admin"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed top-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-background/80 backdrop-blur-md border border-border/50 text-sm font-medium text-foreground hover:bg-background hover:border-primary/30 transition-all shadow-sm"
+      >
+        <LogIn className="w-4 h-4" />
+        Login
+      </a>
+
       <div className="container max-w-4xl py-10 px-4 sm:py-16 relative z-10">
         {/* Header */}
         <header className="text-center mb-10 sm:mb-14 animate-fade-in">
