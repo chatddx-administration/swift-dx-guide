@@ -29,7 +29,7 @@ const Index = () => {
   useEffect(() => {
     const fetchModelOptions = async () => {
       try {
-        const response = await fetch(`${backendUrl}/api/agents?output_type=swift`, {
+        const response = await fetch(`${backendUrl}/api/agents?output_type=DDXManagement`, {
           credentials: "include",
         });
 
