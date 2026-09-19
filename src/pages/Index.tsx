@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Send, Stethoscope, Loader2, AlertTriangle, Activity, Sparkles, LogIn } from "lucide-react";
+import { Send, Stethoscope, Loader2, AlertTriangle, Activity, Sparkles, LogIn, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,12 +14,23 @@ interface ModelOption {
   label: string;
 }
 
+// The API is session-authenticated, so every call to it doubles as a login
+// check: 200 means Django accepted our session cookie, 401/403 means we are
+// anonymous. Any other status says nothing about the session, hence null.
+const loginStateFromResponse = (response: Response): boolean | null => {
+  if (response.ok) return true;
+  if (response.status === 401 || response.status === 403) return false;
+  return null;
+};
+
 const Index = () => {
   const [symptoms, setSymptoms] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState<any>(null);
   const [model, setModel] = useState<string>();
   const [errorToastId, setErrorToastId] = useState<string | number | null>(null);
+  // null while unknown, so we don't flash the wrong link on first paint.
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   const [modelOptions, setModelOptions] = useState<ModelOption[]>([
   ]);
@@ -33,6 +44,8 @@ const Index = () => {
           credentials: "include",
         });
 
+        setIsLoggedIn((current) => loginStateFromResponse(response) ?? current);
+
         const data = await response.json();
         if (Array.isArray(data)) {
           setModelOptions(data);
@@ -42,6 +55,8 @@ const Index = () => {
         }
       } catch (error) {
         console.error("Error fetching model options:", error);
+        // Never got an answer, so fall back to offering login.
+        setIsLoggedIn((current) => current ?? false);
       }
     };
 
@@ -75,6 +90,8 @@ const Index = () => {
           model: model,
         }),
       });
+
+      setIsLoggedIn((current) => loginStateFromResponse(response) ?? current);
 
       if (!response.ok) {
         let errorMessage = `Server returned error status: ${response.status}`;
@@ -141,13 +158,24 @@ const Index = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/3 rounded-full blur-3xl" />
       </div>
 
-      <a
-        href="/admin/login/?next=/"
-        className="fixed top-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-background/80 backdrop-blur-md border border-border/50 text-sm font-medium text-foreground hover:bg-background hover:border-primary/30 transition-all shadow-sm"
-      >
-        <LogIn className="w-4 h-4" />
-        Login
-      </a>
+      {isLoggedIn !== null && (
+        <a
+          href={isLoggedIn ? "/admin/" : "/admin/login/?next=/"}
+          className="fixed top-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-background/80 backdrop-blur-md border border-border/50 text-sm font-medium text-foreground hover:bg-background hover:border-primary/30 transition-all shadow-sm"
+        >
+          {isLoggedIn ? (
+            <>
+              <ShieldCheck className="w-4 h-4" />
+              Admin
+            </>
+          ) : (
+            <>
+              <LogIn className="w-4 h-4" />
+              Login
+            </>
+          )}
+        </a>
+      )}
 
       <div className="container max-w-4xl py-10 px-4 sm:py-16 relative z-10">
         {/* Header */}
