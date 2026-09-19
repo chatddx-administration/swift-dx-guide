@@ -51,11 +51,11 @@ const Index = () => {
   }, [backendUrl]);
 
   useEffect(() => {
-    // Django exposes /auth/ for exactly this: 200 when the request carries an
+    // Django exposes /api/auth/ for exactly this: 200 when the request carries an
     // authenticated session, 401 when it doesn't.
     const checkLogin = async () => {
       try {
-        const response = await fetch(`${backendUrl}/auth/`, {
+        const response = await fetch(`${backendUrl}/api/auth/`, {
           credentials: "include",
         });
         setIsLoggedIn(response.ok);
