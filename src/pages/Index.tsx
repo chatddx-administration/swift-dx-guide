@@ -14,15 +14,6 @@ interface ModelOption {
   label: string;
 }
 
-// The API is session-authenticated, so every call to it doubles as a login
-// check: 200 means Django accepted our session cookie, 401/403 means we are
-// anonymous. Any other status says nothing about the session, hence null.
-const loginStateFromResponse = (response: Response): boolean | null => {
-  if (response.ok) return true;
-  if (response.status === 401 || response.status === 403) return false;
-  return null;
-};
-
 const Index = () => {
   const [symptoms, setSymptoms] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -44,8 +35,6 @@ const Index = () => {
           credentials: "include",
         });
 
-        setIsLoggedIn((current) => loginStateFromResponse(response) ?? current);
-
         const data = await response.json();
         if (Array.isArray(data)) {
           setModelOptions(data);
@@ -55,12 +44,28 @@ const Index = () => {
         }
       } catch (error) {
         console.error("Error fetching model options:", error);
-        // Never got an answer, so fall back to offering login.
-        setIsLoggedIn((current) => current ?? false);
       }
     };
 
     fetchModelOptions();
+  }, [backendUrl]);
+
+  useEffect(() => {
+    // Django exposes /auth/ for exactly this: 200 when the request carries an
+    // authenticated session, 401 when it doesn't.
+    const checkLogin = async () => {
+      try {
+        const response = await fetch(`${backendUrl}/auth/`, {
+          credentials: "include",
+        });
+        setIsLoggedIn(response.ok);
+      } catch (error) {
+        console.error("Error checking login status:", error);
+        setIsLoggedIn(false);
+      }
+    };
+
+    checkLogin();
   }, [backendUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -90,8 +95,6 @@ const Index = () => {
           model: model,
         }),
       });
-
-      setIsLoggedIn((current) => loginStateFromResponse(response) ?? current);
 
       if (!response.ok) {
         let errorMessage = `Server returned error status: ${response.status}`;
@@ -160,7 +163,7 @@ const Index = () => {
 
       {isLoggedIn !== null && (
         <a
-          href={isLoggedIn ? "/admin/" : "/admin/login/?next=/"}
+          href={isLoggedIn ? `${backendUrl}/admin/` : `${backendUrl}/admin/login/?next=/`}
           className="fixed top-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-background/80 backdrop-blur-md border border-border/50 text-sm font-medium text-foreground hover:bg-background hover:border-primary/30 transition-all shadow-sm"
         >
           {isLoggedIn ? (
